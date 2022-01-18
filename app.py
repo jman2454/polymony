@@ -12,22 +12,22 @@ class App:
             pass
         else:
             self.instruments = [
-                Instrument()
+                Instrument(1)
                     .withRing(Ring(12, 3, 'tick'))
                     .withRing(Ring(2, 3, 'snare'))
                     .withRing(Ring(6, 3, 'snare'))
                     .withRing(Ring(8, 3, 'block'))
                     .withRing(Ring(4, 3, 'kick'))
-                ,
+                # ,
                 # Instrument(1)
                 #     .withRing(Ring(12, 3, 'tick'))
                 #     .withRing(Ring(2, 3, 'snare'))
                 #     .withRing(Ring(6, 3, 'snare'))
                 #     .withRing(Ring(8, 3, 'block'))
                 #     .withRing(Ring(4, 3, 'kick'))
-                Instrument(2)
-                    .withRing(Ring(2, 3, 'kick'))
-                    .withRing(Ring(3, 3, 'kick'))
+                # Instrument(200)
+                #     .withRing(Ring(1, 3, 'kick'))
+                    # .withRing(Ring(3, 3, 'kick'))
             ]
 
     def loop(self):
@@ -38,6 +38,6 @@ class App:
     def start(self):
         self.tk.after(self.rate, self.loop)
         for ins in self.instruments:
-            ins.generateLoop(300)
+            ins.generateLoop(1)
         # self.tk.mainloop()
         # playsound.playsound('out.wav')

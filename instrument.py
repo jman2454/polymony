@@ -51,13 +51,15 @@ class Instrument:
             for i in range(ring.freq):
                 loop = loop.overlay(ring.segment, position=int(i*ms/ring.freq))
             
-            (loop).export(str.format('temp/ring{}.wav', ring_no), format='wav')
+            (loop*n_loops).export(str.format('temp/ring{}.wav', ring_no), format='wav')
+            ring_loops.append(loop)
 
         output = empty
 
         for loop in ring_loops:
             output = output.overlay(loop)
         
+        (output*n_loops*100).export('temp/full.wav', format='wav')
         return output * n_loops
 
         
