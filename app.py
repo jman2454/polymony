@@ -11,15 +11,24 @@ class App:
         if config:
             pass
         else:
-            self.instruments.append(
+            self.instruments = [
                 Instrument()
-                    # .withRing(Ring(3, 3, 'tick'))
+                    .withRing(Ring(12, 3, 'tick'))
+                    .withRing(Ring(2, 3, 'snare'))
+                    .withRing(Ring(6, 3, 'snare'))
+                    .withRing(Ring(8, 3, 'block'))
+                    .withRing(Ring(4, 3, 'kick'))
+                ,
+                # Instrument(1)
+                #     .withRing(Ring(12, 3, 'tick'))
+                #     .withRing(Ring(2, 3, 'snare'))
+                #     .withRing(Ring(6, 3, 'snare'))
+                #     .withRing(Ring(8, 3, 'block'))
+                #     .withRing(Ring(4, 3, 'kick'))
+                Instrument(2)
                     .withRing(Ring(2, 3, 'kick'))
-                    # .withRing(Ring(3, 3, 'kick'))
-                    # .withRing(Ring(8, 3, 'kick'))
-                    # .withRing(Ring(8, 3, 'tick'))
-                    # .withRing(Ring(6, 3, 'closed'))
-                )
+                    .withRing(Ring(3, 3, 'kick'))
+            ]
 
     def loop(self):
         for ins in self.instruments:
@@ -29,14 +38,6 @@ class App:
     def start(self):
         self.tk.after(self.rate, self.loop)
         for ins in self.instruments:
-            ins.generateLoop(10000)
+            ins.generateLoop(300)
         # self.tk.mainloop()
-        # ins = Instrument()
-        # if val.isnumeric():
-        #     ins = ins.withRing(Ring(int(val),3,'kick'))
-        # else:
-        #     if val == 'p':
-        #         ins.generateLoop(1000)
-        playsound.playsound('out.wav')
-
-        # os.remove('out.wav')
+        # playsound.playsound('out.wav')

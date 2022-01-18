@@ -4,52 +4,61 @@ import json
 import wave
 import pydub
 import os
-from io import StringIO
+import shutil
 
 SOUNDS = { 
     'default': 'rimshot.wav', 
     'kick': 'kick.wav', 
     'open': 'hat_open.wav', 
     'closed': 'hat_closed.wav',
-    'tick': 'hat_tick.wav' 
+    'tick': 'hat_tick.wav',
+    'snare': 'snare.wav',
+    'block': 'block.wav',
+    'piano': 'piano.wav',
+    'wave': 'rev_kick.wav'
 }
 
 TWOPI = 2*math.pi
 
 class Instrument:
-    def __init__(self):
+    def __init__(self, multiplier=1):
         self.theta = 0
 
         # speed in rad/sec
-        self.speed = 1000
+        self.speed = multiplier*math.pi
         self.rings = []
 
     def generateLoop(self, n_loops=1):
         # channels: 2, width: 2, rate: 44100, comptype: 'NONE', compname: 'not compressed'
+        if os.path.exists('temp'):
+            shutil.rmtree('temp')
+        os.mkdir('temp')
         num_seconds = TWOPI / self.speed
         ms = num_seconds * 1000
         n_frames = int(44100 * num_seconds)
 
-        with wave.open('temp_loop.wav', 'wb') as wvf:
+        with wave.open('temp/temp_loop.wav', 'wb') as wvf:
             wvf.setparams((2,2,44100,n_frames,'NONE','not compressed'))
             wvf.writeframes(bytes([0] * n_frames * 2 * 2))
         
-        empty = pydub.AudioSegment.from_file('temp_loop.wav', format='wav')
-        os.remove('temp_loop.wav')
+        empty = pydub.AudioSegment.from_file('temp/temp_loop.wav', format='wav')
+        os.remove('temp/temp_loop.wav')
         ring_loops = []
         
-        for ring in self.rings:
+        for ring_no in range(len(self.rings)):
+            ring = self.rings[ring_no]
             loop = empty
             for i in range(ring.freq):
                 loop = loop.overlay(ring.segment, position=int(i*ms/ring.freq))
-            ring_loops.append(loop)
+            
+            (loop).export(str.format('temp/ring{}.wav', ring_no), format='wav')
 
         output = empty
+
         for loop in ring_loops:
             output = output.overlay(loop)
         
-        output = output * n_loops
-        output.export('out.wav', format='wav')
+        return output * n_loops
 
         
     def update(self, ms):
