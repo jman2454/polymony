@@ -5,8 +5,8 @@ import wave
 import pydub
 import os
 import shutil
-from gensound import WAV
-from gensound.effects import Stretch
+import librosa
+import soundfile as sf
 
 SOUNDS = { 
     'default': 'rimshot.wav', 
@@ -33,19 +33,23 @@ class Instrument:
         self.rings = []
         self.mult = multiplier
 
+
     def generateLoop(self, n_loops=1):
         # channels: 2, width: 2, rate: 44100, comptype: 'NONE', compname: 'not compressed'
         if os.path.exists('temp'):
             shutil.rmtree('temp')
         os.mkdir('temp')
-        num_seconds = TWOPI / self.speed
+
+        num_seconds = TWOPI / (self.speed) 
         ms = num_seconds * 1000
         n_frames = int(44100 * num_seconds)
 
+        # create blank wave file to work with
         with wave.open('temp/temp_loop.wav', 'wb') as wvf:
             wvf.setparams((2,2,44100,n_frames,'NONE','not compressed'))
             wvf.writeframes(bytes([0] * n_frames * 2 * 2))
         
+        # load it up in pydub
         empty = pydub.AudioSegment.from_file('temp/temp_loop.wav', format='wav')
         os.remove('temp/temp_loop.wav')
         ring_loops = []
@@ -53,28 +57,51 @@ class Instrument:
         for ring_no in range(len(self.rings)):
             ring = self.rings[ring_no]
             loop = empty
+
+            # 'tick' with each ring's frequency across the entire 'num_seconds' span
             for i in range(ring.freq):
                 loop = loop.overlay(ring.segment, position=int(i*ms/ring.freq))
                         
             filename = lambda prefix: str.format('temp/{}ring{}.wav', prefix, ring_no)
+
+            # write a temp loop file
             loop.export(filename('temp'), format='wav')
+            orig = wave.open(filename('temp'))
+            new = wave.open(filename('temp2'), 'wb')
 
-            wvf = WAV(filename('temp'))
-            wvf *= Stretch(rate=self.mult)
-            wvf.export(filename(''))
+            # multiply the frame rate (this pitches up and increases speed)
+            # but the pitch of the actual sample sounds on their own don't matter
+            # we care about the increased frequency of amplitude peaks!
+            new.setparams(orig.getparams())
+            new.setframerate(orig.getframerate()*self.mult)
+            new.writeframes(orig.readframes(orig.getnframes()))
+            orig.close()
+            new.close()
             os.remove(filename('temp'))
-
-            loop = pydub.AudioSegment.from_file(filename(''))*n_loops
+            
+            # load up our faster file and downsample back to 44.1kHz
+            # write to output
+            y, s = librosa.load(filename('temp2'), sr=44100)
+            os.remove(filename('temp2'))
+            sf.write(filename(''), y, s)
+            loop = pydub.AudioSegment.from_file(filename(''))
             ring_loops.append(loop)
+
+            # remove our last temp file for the next loop
             os.remove(filename(''))
     
+        # remove temp folder
         shutil.rmtree('temp')
 
-        output = empty
+        # we need to divide the amount of silence - we could have 
+        # set num_seconds to be shorter earlier in the code, but this
+        # compromises quality of the sped up audio - better to increase framerate
+        # and then resample
+        output = empty[:len(empty)/self.mult]
         for loop in ring_loops:
             output = output.overlay(loop)
         
-        return (output, ring_loops)
+        return (output * n_loops, list(map(lambda x: x*n_loops, ring_loops)))
 
         
     def update(self, ms):
