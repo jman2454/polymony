@@ -13,7 +13,8 @@ SOUNDS = {
     'kick': 'kick.wav', 
     'open': 'hat_open.wav', 
     'closed': 'hat_closed.wav',
-    'tick': 'hat_tick.wav',
+    # 'tick': 'hat_tick.wav',
+    'tick' : 'hattick.wav',
     'snare': 'snare.wav',
     'block': 'block.wav',
     'piano': 'piano.wav',
@@ -53,7 +54,7 @@ class Instrument:
             ring = self.rings[ring_no]
             loop = empty
             for i in range(ring.freq):
-                loop = loop.overlay(ring.segment, position=int(i*ms/(ring.freq)))
+                loop = loop.overlay(ring.segment, position=int(i*ms/ring.freq))
                         
             filename = lambda prefix: str.format('temp/{}ring{}.wav', prefix, ring_no)
             loop.export(filename('temp'), format='wav')
@@ -66,13 +67,13 @@ class Instrument:
             loop = pydub.AudioSegment.from_file(filename(''))*n_loops
             ring_loops.append(loop)
             os.remove(filename(''))
-            # loop.export(filename(''), format='wav')
+    
+        shutil.rmtree('temp')
 
         output = empty
         for loop in ring_loops:
             output = output.overlay(loop)
         
-        # output.export('temp/full.wav', format='wav')
         return (output, ring_loops)
 
         

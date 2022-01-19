@@ -1,6 +1,8 @@
 # import tkinter
 from instrument import Instrument, Ring
 import playsound
+import os
+import shutil
 
 class App:
     def __init__(self, config=None, frame_rate=60):
@@ -18,7 +20,17 @@ class App:
                 #     .withRing(Ring(6, 3, 'snare'))
                 #     .withRing(Ring(8, 3, 'block'))
                 #     .withRing(Ring(4, 3, 'kick'))
-                # Instrument(20)
+                #     .withRing(Ring(15, 3, 'click'))
+                #     ,
+                # Instrument(90).withRing(Ring(2, 3, 'click')).withRing(Ring(3, 3, 'click'))
+                # Instrument(70)
+                #     .withRing(Ring(12, 3, 'tick'))
+                #     .withRing(Ring(2, 3, 'snare'))
+                #     .withRing(Ring(6, 3, 'snare'))
+                #     .withRing(Ring(8, 3, 'block'))
+                #     .withRing(Ring(4, 3, 'kick'))
+                #     ,
+                # Instrument(1)
                 #     .withRing(Ring(12, 3, 'click'))
                 #     .withRing(Ring(2, 3, 'click'))
                 #     .withRing(Ring(6, 3, 'click'))
@@ -27,15 +39,17 @@ class App:
                 #     .withRing(Ring(10, 3, 'click'))
                 #     .withRing(Ring(20, 3, 'click'))
                 #     .withRing(Ring(30, 3, 'click'))
-                #     .withRing(Ring(40, 3, 'click'))
-                # ,
-                # Instrument(33*4)
-                #     .withRing(Ring(1, 3, 'kick')),
-                Instrument(70)
-                    .withRing(Ring(8, 3, 'click'))
-                    .withRing(Ring(10, 3, 'click'))
-                    .withRing(Ring(12, 3, 'click'))
-                    .withRing(Ring(15, 3, 'click'))
+                #     .withRing(Ring(40, 3, 'click')),
+                # Instrument(70)
+                #     .withRing(Ring(8, 3, 'click'))
+                #     .withRing(Ring(10, 3, 'click'))
+                #     .withRing(Ring(12, 3, 'click'))
+                #     .withRing(Ring(15, 3, 'click'))
+                Instrument(1)
+                    .withRing(Ring(2, 3, 'click'))
+                    .withRing(Ring(3, 3, 'click'))
+                    # .withRing(Ring(30, 3, 'click'))
+                    # .withRing(Ring(35, 3, 'click'))
             ]
 
     def loop(self):
@@ -45,7 +59,16 @@ class App:
 
     def start(self):
         # self.tk.after(self.rate, self.loop)
-        for ins in self.instruments:
-            ins.generateLoop(100)
+        if os.path.exists('out'):
+            shutil.rmtree('out')
+        os.mkdir('out')
+
+        for i in range(len(self.instruments)):
+            full, loops = self.instruments[i].generateLoop(100)
+            instrument_path = str.format('out/instrument{}/', i)
+            os.mkdir(instrument_path)
+            full.export(instrument_path + 'full.wav', format='wav')
+            for n in range(len(loops)):
+                loops[n].export(str.format('{}ring{}.wav', instrument_path, n), format='wav')
         # self.tk.mainloop()
         # playsound.playsound('out.wav')
