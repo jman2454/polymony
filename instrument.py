@@ -5,6 +5,8 @@ import wave
 import pydub
 import os
 import shutil
+from gensound import WAV
+from gensound.effects import Stretch
 
 SOUNDS = { 
     'default': 'rimshot.wav', 
@@ -15,7 +17,8 @@ SOUNDS = {
     'snare': 'snare.wav',
     'block': 'block.wav',
     'piano': 'piano.wav',
-    'wave': 'rev_kick.wav'
+    'wave': 'rev_kick.wav',
+    'click': 'click.wav'
 }
 
 TWOPI = 2*math.pi
@@ -25,15 +28,16 @@ class Instrument:
         self.theta = 0
 
         # speed in rad/sec
-        self.speed = multiplier*math.pi
+        self.speed = math.pi
         self.rings = []
+        self.mult = multiplier
 
     def generateLoop(self, n_loops=1):
         # channels: 2, width: 2, rate: 44100, comptype: 'NONE', compname: 'not compressed'
         if os.path.exists('temp'):
             shutil.rmtree('temp')
         os.mkdir('temp')
-        num_seconds = TWOPI / self.speed
+        num_seconds = TWOPI / (self.speed * self.mult)
         ms = num_seconds * 1000
         n_frames = int(44100 * num_seconds)
 
@@ -49,17 +53,22 @@ class Instrument:
             ring = self.rings[ring_no]
             loop = empty
             for i in range(ring.freq):
-                loop = loop.overlay(ring.segment, position=int(i*ms/ring.freq))
-            
-            (loop*n_loops).export(str.format('temp/ring{}.wav', ring_no), format='wav')
+                loop = loop.overlay(ring.segment, position=int(i*ms/(ring.freq)))
+                        
+            # loop = loop._spawn(loop.raw_data, 
+            #     overrides={
+            #         'frame_rate': int(loop.frame_rate * self.mult)
+            #         }).set_frame_rate(loop.frame_rate)
+            filename = str.format('temp/ring{}.wav', ring_no)
+            (loop*n_loops).export(filename, format='wav')
             ring_loops.append(loop)
 
         output = empty
-
         for loop in ring_loops:
             output = output.overlay(loop)
         
-        (output*n_loops*100).export('temp/full.wav', format='wav')
+        (output*n_loops).export('temp/full.wav', format='wav')
+        # (output[:len(output)//self.mult]*n_loops).export('temp/full.wav', format='wav')
         return output * n_loops
 
         

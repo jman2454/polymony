@@ -12,22 +12,37 @@ class App:
             pass
         else:
             self.instruments = [
-                Instrument(1)
-                    .withRing(Ring(12, 3, 'tick'))
-                    .withRing(Ring(2, 3, 'snare'))
-                    .withRing(Ring(6, 3, 'snare'))
-                    .withRing(Ring(8, 3, 'block'))
-                    .withRing(Ring(4, 3, 'kick'))
-                # ,
                 # Instrument(1)
                 #     .withRing(Ring(12, 3, 'tick'))
                 #     .withRing(Ring(2, 3, 'snare'))
                 #     .withRing(Ring(6, 3, 'snare'))
                 #     .withRing(Ring(8, 3, 'block'))
                 #     .withRing(Ring(4, 3, 'kick'))
-                # Instrument(200)
-                #     .withRing(Ring(1, 3, 'kick'))
-                    # .withRing(Ring(3, 3, 'kick'))
+                # Instrument(20)
+                #     .withRing(Ring(12, 3, 'click'))
+                #     .withRing(Ring(2, 3, 'click'))
+                #     .withRing(Ring(6, 3, 'click'))
+                #     .withRing(Ring(8, 3, 'click'))
+                #     .withRing(Ring(4, 3, 'click'))
+                #     .withRing(Ring(10, 3, 'click'))
+                #     .withRing(Ring(20, 3, 'click'))
+                #     .withRing(Ring(30, 3, 'click'))
+                #     .withRing(Ring(40, 3, 'click'))
+                # ,
+                # Instrument(33*4)
+                #     .withRing(Ring(1, 3, 'kick')),
+                Instrument(1)
+                    .withRing(Ring(8, 3, 'kick'))
+                    .withRing(Ring(10, 3, 'kick'))
+                    .withRing(Ring(12, 3, 'kick'))
+                    .withRing(Ring(15, 3, 'kick'))
+                # Instrument(70)
+                #     .withRing(Ring(8, 3, 'click'))
+                #     .withRing(Ring(12, 3, 'click'))
+                #     .withRing(Ring(15, 3, 'click'))
+                    # .withRing(Ring(15, 3, 'click'))
+                    # .withRing(Ring(6, 3, 'click'))
+                    # .withRing(Ring(15, 3, 'click'))
             ]
 
     def loop(self):
