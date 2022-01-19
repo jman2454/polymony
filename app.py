@@ -1,4 +1,4 @@
-import tkinter
+# import tkinter
 from instrument import Instrument, Ring
 import playsound
 
@@ -6,7 +6,7 @@ class App:
     def __init__(self, config=None, frame_rate=60):
         self.rate = int(1000.0 / frame_rate)
         self.instruments = []
-        self.tk = tkinter.Tk()
+        # self.tk = tkinter.Tk()
 
         if config:
             pass
@@ -31,28 +31,21 @@ class App:
                 # ,
                 # Instrument(33*4)
                 #     .withRing(Ring(1, 3, 'kick')),
-                Instrument(1)
-                    .withRing(Ring(8, 3, 'kick'))
-                    .withRing(Ring(10, 3, 'kick'))
-                    .withRing(Ring(12, 3, 'kick'))
-                    .withRing(Ring(15, 3, 'kick'))
-                # Instrument(70)
-                #     .withRing(Ring(8, 3, 'click'))
-                #     .withRing(Ring(12, 3, 'click'))
-                #     .withRing(Ring(15, 3, 'click'))
-                    # .withRing(Ring(15, 3, 'click'))
-                    # .withRing(Ring(6, 3, 'click'))
-                    # .withRing(Ring(15, 3, 'click'))
+                Instrument(70)
+                    .withRing(Ring(8, 3, 'click'))
+                    .withRing(Ring(10, 3, 'click'))
+                    .withRing(Ring(12, 3, 'click'))
+                    .withRing(Ring(15, 3, 'click'))
             ]
 
     def loop(self):
         for ins in self.instruments:
             ins.update(self.rate)
-        self.tk.after(self.rate, self.loop)
+        # self.tk.after(self.rate, self.loop)
 
     def start(self):
-        self.tk.after(self.rate, self.loop)
+        # self.tk.after(self.rate, self.loop)
         for ins in self.instruments:
-            ins.generateLoop(1)
+            ins.generateLoop(100)
         # self.tk.mainloop()
         # playsound.playsound('out.wav')

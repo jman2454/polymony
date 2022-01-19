@@ -37,7 +37,7 @@ class Instrument:
         if os.path.exists('temp'):
             shutil.rmtree('temp')
         os.mkdir('temp')
-        num_seconds = TWOPI / (self.speed * self.mult)
+        num_seconds = TWOPI / self.speed
         ms = num_seconds * 1000
         n_frames = int(44100 * num_seconds)
 
@@ -55,21 +55,25 @@ class Instrument:
             for i in range(ring.freq):
                 loop = loop.overlay(ring.segment, position=int(i*ms/(ring.freq)))
                         
-            # loop = loop._spawn(loop.raw_data, 
-            #     overrides={
-            #         'frame_rate': int(loop.frame_rate * self.mult)
-            #         }).set_frame_rate(loop.frame_rate)
-            filename = str.format('temp/ring{}.wav', ring_no)
-            (loop*n_loops).export(filename, format='wav')
+            filename = lambda prefix: str.format('temp/{}ring{}.wav', prefix, ring_no)
+            loop.export(filename('temp'), format='wav')
+
+            wvf = WAV(filename('temp'))
+            wvf *= Stretch(rate=self.mult)
+            wvf.export(filename(''))
+            os.remove(filename('temp'))
+
+            loop = pydub.AudioSegment.from_file(filename(''))*n_loops
             ring_loops.append(loop)
+            os.remove(filename(''))
+            # loop.export(filename(''), format='wav')
 
         output = empty
         for loop in ring_loops:
             output = output.overlay(loop)
         
-        (output*n_loops).export('temp/full.wav', format='wav')
-        # (output[:len(output)//self.mult]*n_loops).export('temp/full.wav', format='wav')
-        return output * n_loops
+        # output.export('temp/full.wav', format='wav')
+        return (output, ring_loops)
 
         
     def update(self, ms):
