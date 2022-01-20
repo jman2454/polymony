@@ -9,11 +9,14 @@ import librosa
 import soundfile as sf
 
 SOUNDS = { 
-    'default': 'rimshot.wav', 
+    'default': 'hey.wav', 
+    # 'default': 'click.wav',
+    'wow' : 'whip.wav',
+    'whip': 'whip.wav',
     'kick': 'kick.wav', 
     'open': 'hat_open.wav', 
     'closed': 'hat_closed.wav',
-    # 'tick': 'hat_tick.wav',
+    'shot': 'rimshot.wav',
     'tick' : 'hattick.wav',
     'snare': 'snare.wav',
     'block': 'block.wav',
@@ -111,7 +114,8 @@ class Instrument:
         for loop in ring_loops:
             output = output.overlay(loop)
         
-        ratio = seconds*int(len(empty)/len(output))
+        ratio = seconds * int(len(empty)/len(output))
+        ratio = 1 if ratio < 1 else int(ratio)
         return (output * ratio, list(map(lambda x: x * ratio, ring_loops)))
 
         
