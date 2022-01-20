@@ -29,18 +29,21 @@ class Instrument:
         self.theta = 0
 
         # speed in rad/sec
-        self.speed = math.pi
+        self.speed = 2*math.pi
         self.rings = []
         self.mult = multiplier
 
-
-    def generateLoop(self, n_loops=1):
+    def generateLoop(self, seconds=1):
         # channels: 2, width: 2, rate: 44100, comptype: 'NONE', compname: 'not compressed'
         if os.path.exists('temp'):
             shutil.rmtree('temp')
         os.mkdir('temp')
 
-        num_seconds = TWOPI / (self.speed) 
+        num_seconds = TWOPI / self.speed
+
+        if (self.mult < 1):
+            num_seconds = num_seconds / self.mult
+
         ms = num_seconds * 1000
         n_frames = int(44100 * num_seconds)
 
@@ -62,33 +65,40 @@ class Instrument:
             for i in range(ring.freq):
                 loop = loop.overlay(ring.segment, position=int(i*ms/ring.freq))
                         
+            if self.mult > 40:
+                loop += 10
+            
             filename = lambda prefix: str.format('temp/{}ring{}.wav', prefix, ring_no)
 
-            # write a temp loop file
-            loop.export(filename('temp'), format='wav')
-            orig = wave.open(filename('temp'))
-            new = wave.open(filename('temp2'), 'wb')
+            if (self.mult > 1):
+                # write a temp loop file
+                loop.export(filename('temp'), format='wav')
+                orig = wave.open(filename('temp'))
+                new = wave.open(filename('temp2'), 'wb')
 
-            # multiply the frame rate (this pitches up and increases speed)
-            # but the pitch of the actual sample sounds on their own don't matter
-            # we care about the increased frequency of amplitude peaks!
-            new.setparams(orig.getparams())
-            new.setframerate(orig.getframerate()*self.mult)
-            new.writeframes(orig.readframes(orig.getnframes()))
-            orig.close()
-            new.close()
-            os.remove(filename('temp'))
+                # multiply the frame rate (this pitches up and increases speed)
+                # but the pitch of the actual sample sounds on their own don't matter
+                # we care about the increased frequency of amplitude peaks!
+                new.setparams(orig.getparams())
+                new.setframerate(orig.getframerate()*self.mult)
+                new.writeframes(orig.readframes(orig.getnframes()))
+                orig.close()
+                new.close()
+                os.remove(filename('temp'))
             
-            # load up our faster file and downsample back to 44.1kHz
-            # write to output
-            y, s = librosa.load(filename('temp2'), sr=44100)
-            os.remove(filename('temp2'))
-            sf.write(filename(''), y, s)
-            loop = pydub.AudioSegment.from_file(filename(''))
+                # load up our faster file and downsample back to 44.1kHz
+                # write to output
+                y, s = librosa.load(filename('temp2'), sr=44100)
+                os.remove(filename('temp2'))
+                sf.write(filename(''), y, s)
+
+                loop = pydub.AudioSegment.from_file(filename(''))
+
             ring_loops.append(loop)
 
-            # remove our last temp file for the next loop
-            os.remove(filename(''))
+            if (os.path.exists(filename(''))):
+                # remove our last temp file for the next loop
+                os.remove(filename(''))
     
         # remove temp folder
         shutil.rmtree('temp')
@@ -101,7 +111,8 @@ class Instrument:
         for loop in ring_loops:
             output = output.overlay(loop)
         
-        return (output * n_loops, list(map(lambda x: x*n_loops, ring_loops)))
+        ratio = seconds*int(len(empty)/len(output))
+        return (output * ratio, list(map(lambda x: x * ratio, ring_loops)))
 
         
     def update(self, ms):
@@ -116,7 +127,8 @@ class Instrument:
         if self.theta < prev:
             playsound.playsound('out.wav', block=False)
 
-    def withRing(self, ring):
+    def withRing(self, freq, sound='default'):
+        ring = Ring(freq, 3*len(self.rings), sound)
         self.rings += [ring]
         return self
 
