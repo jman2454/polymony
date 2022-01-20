@@ -7,6 +7,9 @@ import os
 import shutil
 import librosa
 import soundfile as sf
+import pygame
+import math
+from pygame.mixer import Sound
 
 SOUNDS = { 
     'default': 'hey.wav', 
@@ -35,8 +38,15 @@ class Instrument:
         self.speed = 2*math.pi
         self.rings = []
         self.mult = multiplier
+        self.loop_cache = {}
+        self.sound_cache = {}
+        self.pct = 0
+        self.time = 0
 
-    def generateLoop(self, seconds=1):
+    def getLoop(self, seconds=1):
+        if seconds in self.loop_cache:
+            return self.loop_cache[seconds]
+
         # channels: 2, width: 2, rate: 44100, comptype: 'NONE', compname: 'not compressed'
         if os.path.exists('temp'):
             shutil.rmtree('temp')
@@ -116,25 +126,44 @@ class Instrument:
         
         ratio = seconds * int(len(empty)/len(output))
         ratio = 1 if ratio < 1 else int(ratio)
-        return (output * ratio, list(map(lambda x: x * ratio, ring_loops)))
 
-        
+        result = (output * ratio, list(map(lambda x: x * ratio, ring_loops)))
+        self.loop_cache[seconds] = result
+
+        outfile = str.format('full{}.wav', seconds)
+        result[0].export(outfile, format='wav')
+        self.sound_cache[seconds] = Sound(outfile)
+        return result
+
     def update(self, ms):
-        inc = self.speed * (ms / 1000)
-        
+        # inc = self.speed * (ms / 1000)
+        self.time = (self.time + ms) % 1000
+        self.pct = self.time / 1000
         # for ring in self.rings:
         #     if ring.doesNeedlePass(self.theta, inc):
         #         ring.play()
 
-        prev = self.theta
-        self.theta = (self.theta + inc) % TWOPI
-        if self.theta < prev:
-            playsound.playsound('out.wav', block=False)
+        # prev = self.theta
+        # self.theta = (self.theta + inc) % TWOPI
+        # if self.theta < prev:
+        #     playsound.playsound('out.wav', block=False)
+
+    def draw(self, canvas):
+        for ring in self.rings:
+            ring.draw(self.pct, canvas)
+
+        length = 100*(len(self.rings))
+        x, y = 400 + length*math.cos(TWOPI * self.pct + 2*math.pi/4), 400 + length*math.sin(TWOPI * self.pct + 2*math.pi/4)
+        pygame.draw.line(canvas, (255,255,255), (400,400), (x,y))
 
     def withRing(self, freq, sound='default'):
-        ring = Ring(freq, 3*len(self.rings), sound)
+        ring = Ring(freq, 100*(len(self.rings)+1), sound)
         self.rings += [ring]
         return self
+
+    def playMusic(self, seconds):
+        self.getLoop(seconds)
+        self.sound_cache[seconds].play()
 
 class Ring:
     def __init__(self, freq, r, sound_type='default'):
@@ -169,6 +198,22 @@ class Ring:
     def play(self):
         pass
         # playsound.playsound(str.format('sounds/{}', SOUNDS[self.type]), block=False)
+
+    def draw(self, beat_pct, canvas):
+        pygame.draw.circle(canvas, (255,255,255), (400,400), self.r, 1)
+
+        circ_ball_pct = 20 / math.pi * self.r * 2
+
+        for i in range(self.freq):
+            pct = i / self.freq
+            x, y = 400 + self.r*math.cos(TWOPI * pct), 400 + self.r*math.sin(TWOPI * pct)
+            fill_color = (255,255,255)
+
+            if ((pct + 3) * 100 - 5) % 100 < beat_pct * 100 and ((pct + 3) * 100 + 5) % 100 > beat_pct * 100:
+                print("YEE")
+                fill_color = (0,0,0)
+
+            pygame.draw.circle(canvas, fill_color, (x, y), 10)
 
 def createRing(json):
     return Ring(json['freq'], json['r'])
