@@ -26,27 +26,24 @@ class App:
             pass
         else:
             self.instruments = [
-                # Instrument(1).withRing(1, 'kick').withRing(2, 'snare'),
-                # Instrument(.75).withRing(1, 'kick').withRing(3).withRing(6, 'closed').withRing(2, 'snare').withRing(12, 'click')
+                # Instrument(1).withRing(4, 'snare').withRing(5, 'snare').withRing(6, 'snare'),
+                # Instrument(1).withRing(2, 'click').withRing(3, 'click')
+                # Instrument(1).withRing(1, 'kick').withRing(3).withRing(6, 'closed').withRing(2, 'snare').withRing(12, 'click')
                 # Instrument(50)
                 #     .withRing(2, 'kick')
                 #     .withRing(3, 'kick')
-                Instrument(1).withRing(3, 'wow').withRing(5, 'wow')
+                # Instrument(1).withRing(3, 'wow').withRing(5, 'wow')
                 #     .withRing(6, 'kick')
                 # Instrument(.5)
-                # # Instrument(.25)
-                #     .withRing(3, 'kick')
-                #     .withRing(4, 'snare')
-                #     .withRing(6, 'closed')
+                # Instrument(1)
+                # #     # .withRing(1, 'snare')
+                # #     # .withRing(5, 'wow')
+                # #     # .withRing(10, 'click')
+                # #     # # .withRing(12, 'click')
+                #     .withRing(8, 'click')
+                #     .withRing(10, 'click')
                 #     .withRing(12, 'click')
-                    # .withRing(1, 'snare')
-                    # .withRing(5, 'wow')
-                    # .withRing(10, 'click')
-                    # # .withRing(12, 'click')
-                    # .withRing(8, 'click')
-                    # .withRing(10, 'click')
-                    # .withRing(12, 'click')
-                    # .withRing(15, 'click')
+                #     .withRing(15, 'click')
                     # .withRing(6, 'tick')
                     # .withRing(15, 'click')
                 # Instrument(1).withRing(1, 'kick').withRing(3).withRing(6, 'closed').withRing(2, 'snare').withRing(12, 'click').withRing(15,'tick')
@@ -63,7 +60,7 @@ class App:
                 # Instrument(50).withRing(8, 'closed').withRing(12, 'tick').withRing(15, 'click')
                 # ,
                 # Instrument(70).withRing(2).withRing(3),
-                # Instrument(.25).withRing(4).withRing(6).withRing(12).withRing(8).withRing(15).withRing(18),
+                # Instrument(.25).withRing(4).withRing(6).withRing(12).withRing(8).withRing(15).withRing(18)
                 # Instrument( 40).withRing(4).withRing(6).withRing(12).withRing(8).withRing(15).withRing(18),
                 # Instrument(1).withRing(8).withRing(10).withRing(12).withRing(15),
                 # Instrument(25).withRing(8).withRing(10).withRing(12).withRing(15),
@@ -71,7 +68,7 @@ class App:
                 # Instrument(100).withRing(4).withRing(5).withRing(6),
                 # Instrument(50).withRing(3),
                 # Instrument(100).withRing(3).withRing(5)
-                # Instrument(50).withRing(5).withRing(8)
+                Instrument(.5).withRing(5,'kick').withRing(8,'snare')
                 # Instrument(75).withRing(3).withRing(5),
                 # Instrument(66).withRing(3).withRing(5),
                 # Instrument(66).withRing(5).withRing(8),
@@ -87,8 +84,10 @@ class App:
         # self.tk.after(self.rate, self.loop)
 
     def animate(self, instrument):
-
-        
+        def change_mult(s):
+            instrument.stop()
+            instrument.setMultiplier(s)
+            instrument.start()
         
         delta = 0
         running = True
@@ -97,14 +96,11 @@ class App:
         slider_y = 16 * Config.SCREEN_HEIGHT / 20
         slider_height = Config.SCREEN_HEIGHT / 25
         slider = DiscreteSlider(50,(Config.SCREEN_CENTER[0] - .75 * Config.SCREEN_WIDTH / 2, slider_y),
-                                    (.75 * Config.SCREEN_WIDTH, slider_height))
-
-        def change_mult():
-            instrument.stop()
-            instrument.setMultiplier(slider.getSelection())
-            instrument.start()
-        play_button = button.Button(pos=(Config.SCREEN_CENTER[0] - 25, slider_y + slider_height + 50), size=(50,50), color=Config.GREEN,
+                                    (.75 * Config.SCREEN_WIDTH, slider_height),
                                     callback=change_mult)
+
+        # play_button = button.Button(pos=(Config.SCREEN_CENTER[0] - 25, slider_y + slider_height + 50), size=(50,50), color=Config.GREEN,
+        #                             callback=lambda : change_mult(slider.getSelection()))
         
         # playsound.playsound('out/instrument0/full.wav', block=False)
 
@@ -119,11 +115,12 @@ class App:
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    play_button.update(event)
+                    # play_button.update(event)
+                    pass
 
             # draw methods
             slider.draw(self.screen)
-            play_button.draw(self.screen)
+            # play_button.draw(self.screen)
             instrument.draw(self.screen)
             # box.draw(self.screen)
             

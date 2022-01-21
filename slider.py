@@ -3,7 +3,7 @@ from constants import Config
 
 class DiscreteSlider:
 
-    def __init__(self, count, pos, size, padding_pct=.05, label_fn=None):
+    def __init__(self, count, pos, size, padding_pct=.05, label_fn=None, callback=None):
         self.size = size
         self.pos = pos
         self.count = count
@@ -11,6 +11,7 @@ class DiscreteSlider:
         self.dragging = False
         self.selection = 0
         self.padding = padding_pct * self.size[0]
+        self.callback = callback
 
     def getSelection(self):
         return self.selection
@@ -39,5 +40,8 @@ class DiscreteSlider:
                 r)
 
     def select(self, pos):
-        self.pct = (pos[0] - (Config.SCREEN_WIDTH - self.size[0] + self.padding)/2)/(self.size[0] - self.padding)
+        self.pct = min(max((pos[0] - (Config.SCREEN_WIDTH - self.size[0] + self.padding)/2)/(self.size[0] - self.padding), .01), 1)
+        orig = self.selection
         self.selection = 1 + round(self.count * self.pct)
+        if self.selection != orig:
+            self.callback(self.selection)
