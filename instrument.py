@@ -9,10 +9,14 @@ import librosa
 import soundfile as sf
 import pygame
 import math
+import pyaudio
+import random
+from constants import Config
 from pygame.mixer import Sound
 
 SOUNDS = { 
     'default': 'hey.wav', 
+    'hey': 'hey.wav',
     # 'default': 'click.wav',
     'wow' : 'whip.wav',
     'whip': 'whip.wav',
@@ -42,6 +46,14 @@ class Instrument:
         self.sound_cache = {}
         self.pct = 0
         self.time = 0
+        self.wv = None
+        self.stream = None
+        self.running = False
+
+    def setMultiplier(self, val):
+        self.mult = val
+        self.loop_cache = {}
+        self.sound_cache = {}
 
     def getLoop(self, seconds=1):
         if seconds in self.loop_cache:
@@ -130,40 +142,61 @@ class Instrument:
         result = (output * ratio, list(map(lambda x: x * ratio, ring_loops)))
         self.loop_cache[seconds] = result
 
-        outfile = str.format('full{}.wav', seconds)
+        outfile = str.format('out/full{}.wav', seconds)
         result[0].export(outfile, format='wav')
         self.sound_cache[seconds] = Sound(outfile)
         return result
 
-    def update(self, ms):
-        # inc = self.speed * (ms / 1000)
-        self.time = (self.time + ms) % 1000
-        self.pct = self.time / 1000
-        # for ring in self.rings:
-        #     if ring.doesNeedlePass(self.theta, inc):
-        #         ring.play()
+    def stop(self, seconds=1):
+        self.pct = .125/2
+        self.time = 0
+        self.stopMusic(seconds)
+        self.running = False
+    
+    def start(self, seconds=1):
+        self.pct = 0
+        self.running = True
+        self.playMusic(seconds)
 
-        # prev = self.theta
-        # self.theta = (self.theta + inc) % TWOPI
-        # if self.theta < prev:
-        #     playsound.playsound('out.wav', block=False)
+    def update(self, ms):
+        if self.running:
+            # scale (1s unscaled loop) by multiplier
+            self.time = (self.time + ms) % (1000 / self.mult)
+            self.pct = self.time / (1000 / self.mult)
 
     def draw(self, canvas):
-        for ring in self.rings:
-            ring.draw(self.pct, canvas)
 
-        length = 100*(len(self.rings))
-        x, y = 400 + length*math.cos(TWOPI * self.pct + 2*math.pi/4), 400 + length*math.sin(TWOPI * self.pct + 2*math.pi/4)
-        pygame.draw.line(canvas, (255,255,255), (400,400), (x,y))
+        # pct = ((self.pct * 100 - 33) % 100)/100
+        pct = ((self.pct * 100 - 25) % 100)/100
+        for ring in self.rings:
+            ring.draw(pct, canvas)
+
+        length = (min(Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT)/10)*(len(self.rings))
+        x, y = (Config.SCREEN_WIDTH/2 + length * math.cos(TWOPI * pct + 3*math.pi/8), 
+               Config.SCREEN_HEIGHT/2 + length*math.sin(TWOPI * pct + 3*math.pi/8))
+        pygame.draw.line(canvas, Config.WHITE, Config.SCREEN_CENTER, (x,y))
 
     def withRing(self, freq, sound='default'):
-        ring = Ring(freq, 100*(len(self.rings)+1), sound)
+        ring = Ring(freq, (min(Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT)/10)*(len(self.rings)+1), sound)
         self.rings += [ring]
         return self
 
+    def stopMusic(self, seconds):
+        self.getLoop(seconds)
+        self.sound_cache[seconds].stop()
+
     def playMusic(self, seconds):
         self.getLoop(seconds)
-        self.sound_cache[seconds].play()
+        self.sound_cache[seconds].play(-1)
+        # pya = pyaudio.PyAudio()
+
+        # self.wv = wave.open('out/full10.wav', 'rb')
+        # self.stream = pya.open(format=pya.get_format_from_width(self.wv.getsampwidth()), 
+        #                 channels=self.wv.getnchannels(),
+        #                 rate=self.wv.getframerate(),
+        #                 output=True)
+
+        
 
 class Ring:
     def __init__(self, freq, r, sound_type='default'):
@@ -171,6 +204,7 @@ class Ring:
         self.type = sound_type
         self.r = r
         self.file = str.format('sounds/{}', SOUNDS[sound_type])
+        self.color = [Config.RED, Config.GREEN, Config.BLUE][random.randint(0,2)]
         self.segment = pydub.AudioSegment.from_file(self.file)
         with wave.open(self.file) as wf:
             self.sound_bytes = wf.readframes(wf.getnframes())
@@ -200,17 +234,16 @@ class Ring:
         # playsound.playsound(str.format('sounds/{}', SOUNDS[self.type]), block=False)
 
     def draw(self, beat_pct, canvas):
-        pygame.draw.circle(canvas, (255,255,255), (400,400), self.r, 1)
+        pygame.draw.circle(canvas, Config.WHITE, (400,400), self.r, 1)
 
         circ_ball_pct = 20 / math.pi * self.r * 2
 
         for i in range(self.freq):
             pct = i / self.freq
             x, y = 400 + self.r*math.cos(TWOPI * pct), 400 + self.r*math.sin(TWOPI * pct)
-            fill_color = (255,255,255)
+            fill_color = self.color
 
-            if ((pct + 3) * 100 - 5) % 100 < beat_pct * 100 and ((pct + 3) * 100 + 5) % 100 > beat_pct * 100:
-                print("YEE")
+            if ((pct - .15) * 100 - 5) % 100 < beat_pct * 100 and (((pct - .15) * 100 + 2) % 100 > beat_pct * 100 or ((pct - .15) * 100 + 5) % 100 < ((pct - .15) * 100 - 5) % 100):
                 fill_color = (0,0,0)
 
             pygame.draw.circle(canvas, fill_color, (x, y), 10)

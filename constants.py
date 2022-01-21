@@ -1,0 +1,11 @@
+class Config:
+    FRAME_RATE = 240
+    SCREEN_WIDTH = 800
+    SCREEN_HEIGHT = 800
+    SCREEN_CENTER = (SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+    GREY = (50,50,50)
+    RED = (255,0,0)
+    WHITE = (255,255,255)
+    GREEN = (0,255,0)
+    BLUE = (0,0,255)
+    BLACK = (0,0,0)
