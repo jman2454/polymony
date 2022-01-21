@@ -43,5 +43,5 @@ class DiscreteSlider:
         self.pct = min(max((pos[0] - (Config.SCREEN_WIDTH - self.size[0] + self.padding)/2)/(self.size[0] - self.padding), .01), 1)
         orig = self.selection
         self.selection = 1 + round(self.count * self.pct)
-        if self.selection != orig:
+        if self.callback and self.selection != orig:
             self.callback(self.selection)
