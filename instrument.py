@@ -49,6 +49,7 @@ class Instrument:
         self.wv = None
         self.stream = None
         self.running = False
+        self.spinSpoke = True
 
     def setMultiplier(self, val):
         self.mult = val
@@ -90,8 +91,8 @@ class Instrument:
             for i in range(ring.freq):
                 loop = loop.overlay(ring.segment, position=int(i*ms/ring.freq))
                         
-            if self.mult > 40:
-                loop += 10
+            # if self.mult > 20:
+            #     loop += 10
             
             filename = lambda prefix: str.format('temp/{}ring{}.wav', prefix, ring_no)
 
@@ -158,6 +159,9 @@ class Instrument:
         self.running = True
         self.playMusic(seconds)
 
+    def toggleMode(self):
+        self.spinSpoke = not self.spinSpoke
+
     def update(self, ms):
         if self.running:
             # scale (1s unscaled loop) by multiplier
@@ -167,17 +171,22 @@ class Instrument:
     def draw(self, canvas):
 
         # pct = ((self.pct * 100 - 33) % 100)/100
-        pct = ((self.pct * 100 - 25) % 100)/100
+        # pct = ((self.pct * 100 - 25) % 100)/100
+        pct = ((self.pct * 100 - 50) % 100)/100
         for ring in self.rings:
-            ring.draw(pct, canvas)
+            ring.draw(pct, self.spinSpoke, canvas)
 
-        length = (min(Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT)/10)*(len(self.rings))
-        x, y = (Config.SCREEN_WIDTH/2 + length * math.cos(TWOPI * pct + 3*math.pi/8), 
-               Config.SCREEN_HEIGHT/2 + length*math.sin(TWOPI * pct + 3*math.pi/8))
+        length = (min(Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT)/20)*(len(self.rings))
+        if self.spinSpoke:
+            x, y = (Config.SCREEN_WIDTH/2 + length * math.cos(TWOPI * pct + 3*math.pi/8), 
+                Config.SCREEN_HEIGHT/2 + length * math.sin(TWOPI * pct + 3*math.pi/8))
+        else:
+            x,y = (Config.SCREEN_WIDTH/2 + length * math.cos(0), 
+               Config.SCREEN_HEIGHT/2 + length * math.sin(0))
         pygame.draw.line(canvas, Config.WHITE, Config.SCREEN_CENTER, (x,y))
 
     def withRing(self, freq, sound='default'):
-        ring = Ring(freq, (min(Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT)/10)*(len(self.rings)+1), sound)
+        ring = Ring(freq, (min(Config.SCREEN_WIDTH, Config.SCREEN_HEIGHT)/20)*(len(self.rings)+1), sound)
         self.rings += [ring]
         return self
 
@@ -233,14 +242,18 @@ class Ring:
         pass
         # playsound.playsound(str.format('sounds/{}', SOUNDS[self.type]), block=False)
 
-    def draw(self, beat_pct, canvas):
+    def draw(self, beat_pct, spinSpoke, canvas):
         pygame.draw.circle(canvas, Config.WHITE, (400,400), self.r, 1)
 
         circ_ball_pct = 20 / math.pi * self.r * 2
 
         for i in range(self.freq):
             pct = i / self.freq
-            x, y = 400 + self.r*math.cos(TWOPI * pct), 400 + self.r*math.sin(TWOPI * pct)
+            pct = (pct - .25) % 1
+            if spinSpoke:
+                x, y = Config.SCREEN_CENTER[0] + self.r*math.cos(TWOPI * pct), Config.SCREEN_CENTER[1] + self.r*math.sin(TWOPI * pct)
+            else:
+                x, y = Config.SCREEN_CENTER[0] + self.r*math.cos(TWOPI * pct - ((beat_pct + .18)%1) * TWOPI), Config.SCREEN_CENTER[1] + self.r*math.sin(TWOPI * pct - ((beat_pct + .18)%1) * TWOPI)
             fill_color = self.color
 
             if ((pct - .15) * 100 - 5) % 100 < beat_pct * 100 and (((pct - .15) * 100 + 2) % 100 > beat_pct * 100 or ((pct - .15) * 100 + 5) % 100 < ((pct - .15) * 100 - 5) % 100):
